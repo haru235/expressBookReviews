@@ -34,24 +34,23 @@ public_users.get('/', function (req, res) {
 });
 
 // Get book details based on ISBN
-const getDetails = async (url) => {
-    const req = await axios.get(url)
-    req.then(resp => {
-        return resp.data;
+function getByISBN(isbn) {
+    return new Promise((resolve, reject) => {
+        let isbnNum = parseInt(isbn);
+        if (books[isbnNum]) {
+            resolve(books[isbnNum]);
+        } else {
+            reject({status:404, message:`ISBN ${isbn} not found`});
+        }
     })
-        .catch(err => {
-            return null;
-        })
 }
+// Get book details based on ISBN
 public_users.get('/isbn/:isbn', function (req, res) {
-    const isbn = req.params.isbn
-    getDetails('http://invalid-url/isbn/' + isbn)
-        .then(resp => {
-            res.status(200).json(books[isbn]);
-        })
-        .catch(err => {
-            return res.status(300).json({ message: "Error retrieving book details" });
-        })
+    getByISBN(req.params.isbn)
+    .then(
+        result => res.send(result),
+        error => res.status(error.status).json({message: error.message})
+    );
 });
 
 // Get book details based on author
